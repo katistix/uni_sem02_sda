@@ -25,7 +25,7 @@ private:
 
 
 	bool relatie(Triplet a, Triplet b) const;
-	int binary_search(int i, int j) const;
+	int cautaPozitie(int i, int j) const;
 
 
 public:
@@ -38,9 +38,9 @@ public:
 	//destructor
 	~Matrice(){};
 
-	//returnare element de pe o linie si o coloana
-	//se arunca exceptie daca (i,j) nu e pozitie valida in Matrice
-	//indicii se considera incepand de la 0
+	// returnare element de pe o linie si o coloana
+	// se arunca exceptie daca (i,j) nu e pozitie valida in Matrice
+	// indicii se considera incepand de la 0
 	TElem element(int i, int j) const;
 
 
