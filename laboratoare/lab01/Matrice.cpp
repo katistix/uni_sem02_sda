@@ -11,6 +11,8 @@ using namespace std;
 
 Matrice::Matrice(int n, int m) {
 	// Theta(1)
+
+
 	this->nr_linii = n;
 	this->nr_coloane = m;
 	
@@ -36,6 +38,11 @@ int Matrice::nrColoane() const{
 
 
 TElem Matrice::element(int i, int j) const {
+    // Complexitate:
+    // BC = O(log(n)) - se executa cautarea binara si elementul exista, deci doar returnam valoarea
+    // WC = O(log(n)) - se executa cautarea binara, indiferent daca elementul exista sau nu, tot trebuie sa parcurgem log(n) pasi pentru a determina pozitia
+    // AC = O(log(n)) - in medie, cautarea binara va dura log(n) pasi
+
     if (i < 0 || j < 0 || i >= this->nr_linii || j >= this->nr_coloane) {
         throw std::out_of_range("Invalid position!");
     }
@@ -51,6 +58,12 @@ TElem Matrice::element(int i, int j) const {
 }
 
 TElem Matrice::modifica(int i, int j, TElem e) {
+    // Complexitate:
+    // BC = O(log(n)) - se executa cautarea binara si elementul exista deja, deci doar actualizam valoarea
+    // WC = O(n) - se executa cautarea binara, elementul nu exista, trebuie sa inseram un nou triplet si sa shiftam toate elementele la dreapta
+    // AC = O(n) - in general, daca inseram un element nou, va trebui sa shiftam jumatate din elemente in medie)
+    // General - O(log(n)) - amortizat, deoarece in majoritatea cazurilor doar actualizam un element sau nu facem nimic (daca e == 0 si elementul nu exista)
+
     if (i < 0 || j < 0 || i >= this->nr_linii || j >= this->nr_coloane) {
         throw std::out_of_range("Invalid position!");
     }
@@ -108,6 +121,8 @@ TElem Matrice::modifica(int i, int j, TElem e) {
 
 
 bool Matrice::relatie(Triplet a, Triplet b) const {
+    // Theta(1)
+
 	// compare based on `i`
 	if (a.i < b.i) return true;
 	else if (a.i > b.i) return false;
@@ -120,6 +135,8 @@ bool Matrice::relatie(Triplet a, Triplet b) const {
 
 // Returneaza indexul unde se afla (i,j) SAU indexul unde ar trebui inserat
 int Matrice::cautaPozitie(int i, int j) const {
+    // Complexitate: O(log(n)) - cautare binara
+
     int stanga = 0;
     int dreapta = size - 1;
     int pozitieRezultat = size; // Default: la finalul listei
@@ -142,6 +159,3 @@ int Matrice::cautaPozitie(int i, int j) const {
     }
     return (stanga > dreapta) ? stanga : pozitieRezultat;
 }
-
-
-// TODO: implementeaza destructor

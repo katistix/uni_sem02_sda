@@ -1,0 +1,2 @@
+25. TAD Coada cu prioritati - reprezentare sub forma unei LSI cu perechi (element, prioritate)
+ordonate in functie de prioritati (in relatie cu o functie de ordine)
