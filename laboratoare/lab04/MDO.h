@@ -14,11 +14,27 @@ class IteratorMDO;
 
 typedef bool (*Relatie)(TCheie, TCheie);
 
+// definim un nod pentru LDI
+struct Nod {
+  TElem e;   // (cheie,valoare)
+  Nod *urm;  // next
+  Nod *prec; // prev
+             // constructor pt un nod
+  Nod(TElem e, Nod *urm, Nod *prec) : e(e), urm(urm), prec(prec) {}
+};
+
 class MDO {
   friend class IteratorMDO;
 
 private:
   /* aici e reprezentarea */
+
+  // avem referinte la primul si ultimul element
+  Nod *prim;
+  Nod *ultim;
+  int n;       // numarul de chei
+  Relatie rel; // relatia de ordine dintre chei
+
 public:
   // constructorul implicit al MultiDictionarului Ordonat
   MDO(Relatie r);

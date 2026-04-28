@@ -1,0 +1,4 @@
+32. TAD MultiDictionar ordonat - reprezentare sub forma
+unei LDI cu toatele perechile (cheie, valoare),
+ordonate în raport cu o relație de ordine R între chei
+(în listă o cheie se poate repeta).
