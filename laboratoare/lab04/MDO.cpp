@@ -1,135 +1,174 @@
 #include "MDO.h"
 #include "IteratorMDO.h"
-#include <iostream>
 #include <utility>
 #include <vector>
-
-#include <exception>
 using namespace std;
 
 MDO::MDO(Relatie r) {
-  // initial nu avem inceput sau sfarsit
-  this->prim = nullptr;
-  this->ultim = nullptr;
-  this->n = 0;
   this->rel = r;
+  this->cp = 10;
+  this->e = new TElem[cp];
+  this->urm = new int[cp];
+  this->prec = new int[cp];
+  this->prim = -1;
+  this->ultim = -1;
+  this->primLiber = 0;
+  for (int i = 0; i < cp - 1; i++) {
+    this->urm[i] = i + 1;
+  }
+  this->urm[cp - 1] = -1;
+  this->n = 0;
+}
+
+int MDO::aloca() {
+  // Theta(1)
+  int i = this->primLiber;
+  this->primLiber = this->urm[this->primLiber];
+  return i;
+}
+
+void MDO::dealoca(int i) {
+  // Theta(1)
+  this->urm[i] = this->primLiber;
+  this->primLiber = i;
+}
+
+void MDO::redimensioneaza() {
+  // O(n)
+  TElem *eNou = new TElem[2 * cp];
+  int *urmNou = new int[2 * cp];
+  int *precNou = new int[2 * cp];
+
+  for (int i = 0; i < cp; i++) {
+    eNou[i] = this->e[i];
+    urmNou[i] = this->urm[i];
+    precNou[i] = this->prec[i];
+  }
+
+  for (int i = cp; i < 2 * cp - 1; i++) {
+    urmNou[i] = i + 1;
+  }
+  urmNou[2 * cp - 1] = -1;
+  this->primLiber = cp;
+
+  // dealoca vectorii vechi
+  delete[] this->e;
+  delete[] this->urm;
+  delete[] this->prec;
+
+  this->e = eNou;
+  this->urm = urmNou;
+  this->prec = precNou;
+  this->cp = 2 * cp;
 }
 
 void MDO::adauga(TCheie c, TValoare v) {
-  TElem e = make_pair(c, v);
-  Nod *nou = new Nod(e, nullptr, nullptr);
+  // BC =  Theta(1) (e cea mai mica cheie)
+  // O(n) amortizat (se face redimensionarea tot mai rar)
+  if (this->primLiber == -1) {
+    redimensioneaza();
+  }
+  int nou = aloca();
+  this->e[nou] = make_pair(c, v);
+  this->urm[nou] = -1;
+  this->prec[nou] = -1;
 
-  // daca lista de vida, noul nod devine si prim si ultim
-  if (this->vid()) {
+  if (vid()) {
     this->prim = nou;
     this->ultim = nou;
   } else {
-    // cautam pozitia corecta folosind relatia de ordine
-    Nod *curent = this->prim;
-    while (curent != nullptr && !this->rel(c, curent->e.first)) {
-      curent = curent->urm;
+    int curent = this->prim;
+    while (curent != -1 && !this->rel(c, this->e[curent].first)) {
+      curent = this->urm[curent];
     }
 
-    // inseram in functie de unde s-a oprit curent
-    // inceput
     if (curent == this->prim) {
-      nou->urm = this->prim;  // a->b
-      this->prim->prec = nou; // a<-b
+      this->urm[nou] = this->prim;
+      this->prec[this->prim] = nou;
       this->prim = nou;
-    }
-    // sfarsit
-    else if (curent == nullptr) {
-      nou->prec = this->ultim;
-      this->ultim->urm = nou;
+    } else if (curent == -1) {
+      this->prec[nou] = this->ultim;
+      this->urm[this->ultim] = nou;
       this->ultim = nou;
-    }
-    // in interior
-    else {
-      nou->urm = curent;
-      nou->prec = curent->prec;
-      curent->prec->urm = nou;
-      curent->prec = nou;
+    } else {
+      this->urm[nou] = curent;
+      this->prec[nou] = this->prec[curent];
+      this->urm[this->prec[curent]] = nou;
+      this->prec[curent] = nou;
     }
   }
-
-  this->n++; // creste dimensiunea
+  this->n++;
 }
 
 vector<TValoare> MDO::cauta(TCheie c) const {
+  // Cautarea
+  // BC (cea mai mica cheie) = Theta(1)
+  // WC (cea mai mare cheie) = AC = O(n)
   vector<TValoare> valori;
+  int curent = this->prim;
 
-  // parcurgem de la primul
-  Nod *curent = this->prim;
-
-  // cat timp nu am ajuns la final, avansam
-  while (curent != nullptr) {
-    if (curent->e.first == c) {
-      valori.push_back(curent->e.second);
+  while (curent != -1) {
+    if (this->e[curent].first == c) {
+      valori.push_back(this->e[curent].second);
     }
 
-    // optimizare, daca am trecut de zona unde cheia cautata este, atunci ne
-    // oprim
-    if (!this->rel(curent->e.first, c) && curent->e.first != c) {
+    if (!this->rel(this->e[curent].first, c) && this->e[curent].first != c) {
       break;
     }
 
-    curent = curent->urm; // avansam
+    curent = this->urm[curent];
   }
 
   return valori;
 }
 
 bool MDO::sterge(TCheie c, TValoare v) {
-  Nod *curent = this->prim;
+  // Cauta cheia
+  // WC = AC = O(n)
+  // BC = Theta(1)
+  int curent = this->prim;
 
-  // parcurgem
-  while (curent != nullptr) {
-    // daca nodul contine perechea (cheie, valoare) pe care vrem sa o stergem
-    if (curent->e.first == c && curent->e.second == v) {
-      // mai multe moduri de a sterge in functie de pozitia nodului
+  while (curent != -1) {
+    if (this->e[curent].first == c && this->e[curent].second == v) {
       if (curent == this->prim && curent == this->ultim) {
-        // singurul element din lista
-        this->prim = nullptr;
-        this->ultim = nullptr;
+        this->prim = -1;
+        this->ultim = -1;
       } else if (curent == this->prim) {
-        // este primul element
-        this->prim = this->prim->urm;
-        this->prim->prec = nullptr;
+        this->prim = this->urm[this->prim];
+        this->prec[this->prim] = -1;
       } else if (curent == this->ultim) {
-        // este ultimul element
-        this->ultim = this->ultim->prec;
-        this->ultim->urm = nullptr;
+        this->ultim = this->prec[this->ultim];
+        this->urm[this->ultim] = -1;
       } else {
-        // este in mijloc
-        curent->prec->urm = curent->urm;
-        curent->urm->prec = curent->prec;
+        this->urm[this->prec[curent]] = this->urm[curent];
+        this->prec[this->urm[curent]] = this->prec[curent];
       }
 
-      // dealocam memorie si scadem numarul de noduri
-      delete curent;
+      dealoca(curent);
       this->n--;
 
-      // stergem un singur element, primul gasit
       return true;
     }
-    // avansam
-    curent = curent->urm;
+    curent = this->urm[curent];
   }
   return false;
 }
 
-int MDO::dim() const { return this->n; }
+int MDO::dim() const {
+  // Theta(1)
+  return this->n;
+}
 
-bool MDO::vid() const { return this->n == 0; }
+bool MDO::vid() const {
+  // Theta(1)
+  return this->n == 0;
+}
 
 IteratorMDO MDO::iterator() const { return IteratorMDO(*this); }
 
 MDO::~MDO() {
-  // parcurgem toate nodurile si dealocam memoria
-  Nod *curent = this->prim;
-  while (curent != nullptr) {
-    Nod *deSters = curent;
-    curent = curent->urm;
-    delete deSters;
-  }
+  // Theta(1)
+  delete[] this->e;
+  delete[] this->urm;
+  delete[] this->prec;
 }

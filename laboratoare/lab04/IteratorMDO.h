@@ -14,7 +14,7 @@ private:
   const MDO &dict;
   /* aici e reprezentarea  specifica a iteratorului */
 
-  Nod *curent; // pointer la elementul curent
+  int curent; // indicele elementului curent in tablou
 
 public:
   // reseteaza pozitia iteratorului la inceputul containerului

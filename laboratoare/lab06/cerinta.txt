@@ -1,0 +1,4 @@
+TAD MultiDicționar Ordonat– memorarea cheilor distincte (fiecare cheie va memora un vector
+dinamic cu valorile asociate cheii), reprezentare sub forma unei TD cu rezolvare coliziuni prin
+liste independente. Pentru implementarea vectorului de valori, se va putea folosi vector din
+STL
